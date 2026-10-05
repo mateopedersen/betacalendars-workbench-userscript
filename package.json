@@ -1,6 +1,6 @@
 {
   "name": "betacalendars-workbench-userscript",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "private": true,
   "description": "Offline-first calendar workbench userscript for BetaCalendars.com",
   "scripts": {
