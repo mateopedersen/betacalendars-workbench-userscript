@@ -66,7 +66,9 @@ async function main() {
 
     await page.getByRole('button', { name: 'Print Lab', exact: true }).click();
     assert.match(await page.locator('.bcw-print-preview').innerText(), /February 2027|January 2027/);
-    assert.deepEqual(requests.filter(url => !url.includes('favicon.ico')), ['/fixture']);
+    const functionalRequests = requests.filter(url => !url.includes('favicon.ico'));
+    assert.equal(functionalRequests.every(url => url === '/fixture'), true, 'the Workbench must not make third-party requests');
+    assert.equal(functionalRequests.length, 2, 'the fixture is loaded once initially and once for persistence');
     console.log('Browser smoke test passed: launcher, grid, Sunday rows, resource URLs, safe notes, persistence, keyboard palette and Print Lab.');
   } finally {
     await browser?.close();
