@@ -20,7 +20,7 @@ Install a userscript manager such as Tampermonkey, Violentmonkey or Greasemonkey
 
 ## Screenshots
 
-Screenshots will be added after the public-install browser smoke test. The current in-app browser has no userscript manager, so it cannot honestly represent an installed public build.
+Screenshots will be added after the public-install browser smoke test. The available in-app browser has no userscript manager, so it cannot represent an installed public build.
 
 ## Calendar Engine
 
@@ -61,19 +61,20 @@ Links are ordinary canonical Beta Calendars links and open only after a user cli
 
 ## Development
 
-Requirements: Node.js 20 or newer. This repository uses Node's built-in test runner and has no package dependencies.
+Requirements: Node.js 20 or newer. Unit tests use Node's built-in test runner; the browser smoke test uses Playwright.
 
 ```sh
 npm run build
 npm test
 npm run check
+npm run test:browser
 ```
 
 The build copies the readable source to `dist/betacalendars-workbench.user.js`; it does not minify or bundle third-party code. CI runs tests and policy checks. Live installation testing still requires a browser with a userscript manager.
 
 ## Tests
 
-Automated coverage includes leap-year centuries, date rollover, weekday and ordinal calculations, ISO week boundaries, all twelve 2027 month geometries, month-grid invariants, planner import validation, CSV escaping and safe text rendering checks.
+Automated unit coverage includes leap-year centuries, date rollover, weekday and ordinal calculations, ISO week boundaries, all twelve 2027 month geometries, month-grid invariants, planner import validation, CSV escaping and safe text rendering checks. The Playwright smoke test covers the launcher, February 2027 geometry, resource destinations, XSS-as-text handling, persistence, keyboard palette and Print Lab against a local fixture with no third-party requests.
 
 ## Greasy Fork
 
