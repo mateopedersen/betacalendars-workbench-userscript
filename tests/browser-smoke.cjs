@@ -54,7 +54,7 @@ async function main() {
     assert.equal(await page.locator('.bcw-note strong').innerText(), payload);
     await page.reload();
     await page.addScriptTag({ content: userscript.toString() });
-    await page.getByRole('button', { name: 'Open Beta Calendars Workbench' }).click();
+    await page.getByRole('heading', { name: 'Workbench' }).waitFor();
     await page.getByRole('button', { name: 'Planner', exact: true }).click();
     assert.equal(await page.locator('.bcw-note strong').innerText(), payload);
 
