@@ -57,6 +57,12 @@ async function main() {
     await page.getByRole('heading', { name: 'Workbench' }).waitFor();
     await page.getByRole('button', { name: 'Planner', exact: true }).click();
     assert.equal(await page.locator('.bcw-note strong').innerText(), payload);
+    await page.getByRole('button', { name: 'Settings', exact: true }).click();
+    await page.getByLabel('Theme').selectOption('dark');
+    await page.reload();
+    await page.addScriptTag({ content: userscript.toString() });
+    await page.getByRole('heading', { name: 'Workbench' }).waitFor();
+    assert.equal(await page.locator('.bcw-panel').evaluate(node => node.classList.contains('bcw-dark')), true);
 
     await page.keyboard.press('Control+Shift+K');
     await page.getByRole('dialog', { name: 'Command palette' }).waitFor();
@@ -68,7 +74,7 @@ async function main() {
     assert.match(await page.locator('.bcw-print-preview').innerText(), /February 2027|January 2027/);
     const functionalRequests = requests.filter(url => !url.includes('favicon.ico'));
     assert.equal(functionalRequests.every(url => url === '/fixture'), true, 'the Workbench must not make third-party requests');
-    assert.equal(functionalRequests.length, 2, 'the fixture is loaded once initially and once for persistence');
+    assert.equal(functionalRequests.length, 3, 'the fixture is loaded initially and reloaded for planner and settings persistence');
     console.log('Browser smoke test passed: launcher, grid, Sunday rows, resource URLs, safe notes, persistence, keyboard palette and Print Lab.');
   } finally {
     await browser?.close();
