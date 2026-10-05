@@ -48,7 +48,7 @@ async function main() {
 
     await page.getByRole('button', { name: 'Planner', exact: true }).click();
     const payload = '<img src=x onerror=alert(1)><script>alert("xss")</script>';
-    await page.getByLabel('Note').fill(payload);
+    await page.getByRole('textbox', { name: 'Note' }).fill(payload);
     await page.getByRole('button', { name: 'Add note' }).click();
     assert.equal(await page.locator('.bcw-note img,.bcw-note script').count(), 0);
     assert.equal(await page.locator('.bcw-note strong').innerText(), payload);
