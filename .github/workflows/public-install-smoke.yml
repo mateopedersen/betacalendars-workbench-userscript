@@ -1,0 +1,40 @@
+name: Public install smoke
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  public-install:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - run: npm install --no-audit --no-fund
+      - run: npx playwright install --with-deps chromium
+      - name: Download and verify Violentmonkey 2.49.0 MV3
+        env:
+          VM_SHA256: 3fa676c803a9698453ed23dfe496d4bc29a4bec52f6a95e55c43c2955921f8ee
+        run: |
+          curl --fail --location --silent --show-error \
+            https://github.com/Violentmonkey/Violentmonkey/releases/download/v2.49.0/Violentmonkey-mv3-v2.49.0.zip \
+            --output "$RUNNER_TEMP/violentmonkey.zip"
+          echo "$VM_SHA256  $RUNNER_TEMP/violentmonkey.zip" | sha256sum --check
+          mkdir -p "$RUNNER_TEMP/violentmonkey"
+          unzip -q "$RUNNER_TEMP/violentmonkey.zip" -d "$RUNNER_TEMP/violentmonkey"
+          echo "VIOLENTMONKEY_EXTENSION_PATH=$RUNNER_TEMP/violentmonkey" >> "$GITHUB_ENV"
+      - name: Install the public Greasy Fork script and smoke-test BetaCalendars
+        run: node tests/public-install-smoke.cjs
+      - name: Preserve real-site screenshots
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: beta-calendars-public-install-screenshots
+          path: docs/screenshots/*.png
+          if-no-files-found: warn
+          retention-days: 30
