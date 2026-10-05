@@ -7,8 +7,8 @@
 - **Month Grid** builds independent Monday-first or Sunday-first calendars with natural four-, five-, or six-row geometry, optional adjacent dates, fixed six-row mode and ISO week numbers.
 - **Civil Date Inspector** reports weekday, day of year, month length, quarter, leap-year status, remaining days, ISO week-year and each Sunday/Monday grid column.
 - **ISO Week Lab** highlights calendar-year and ISO week-year boundaries.
-- **Local Planner** attaches notes, category, priority and completion state to dates. Notes stay in this browser's local storage.
-- **Print Lab and Blank Calendar Designer** provide A4/Letter, portrait/landscape, margin estimates, optional title, weekday row, adjacent days, writing area and temporary print CSS.
+- **Local Planner** attaches notes, category, priority and completion state to dates. Notes can be edited or deleted and stay in this browser's local storage.
+- **Print Lab and Blank Calendar Designer** provide A4/Letter, portrait/landscape, margin estimates, week-start and natural/fixed-row controls, ISO week numbers, optional title, weekday row, adjacent days, writing area and temporary print CSS.
 - **Validation Panel** checks the 2027 regression matrix and generated grid invariants.
 - **Resource Navigator** gives explicit-click links to related Beta Calendars monthly, blank, planner, weekly and month pages.
 - **Command Palette**, keyboard controls, high contrast, larger text, stronger focus, reduced motion and link underlining.
