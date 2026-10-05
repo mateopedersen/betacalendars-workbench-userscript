@@ -34,6 +34,7 @@ async function main() {
     await page.getByRole('button', { name: 'Open Beta Calendars Workbench' }).click();
 
     await page.getByRole('button', { name: 'Month Grid', exact: true }).click();
+    await page.getByRole('button', { name: 'Return to Monthly Calendar' }).waitFor();
     await page.getByLabel('Month').selectOption('2');
     await page.getByLabel('Year').fill('2027');
     await page.getByLabel('Year').dispatchEvent('change');
@@ -52,11 +53,16 @@ async function main() {
     await page.getByRole('button', { name: 'Add note' }).click();
     assert.equal(await page.locator('.bcw-note img,.bcw-note script').count(), 0);
     assert.equal(await page.locator('.bcw-note strong').innerText(), payload);
+    const noteCard = page.locator('.bcw-note').first();
+    await noteCard.getByRole('button', { name: 'Edit' }).click();
+    await noteCard.getByRole('textbox', { name: 'Note' }).fill('Edited planner note');
+    await noteCard.getByRole('button', { name: 'Save changes' }).click();
+    assert.equal(await page.locator('.bcw-note strong').innerText(), 'Edited planner note');
     await page.reload();
     await page.addScriptTag({ content: userscript.toString() });
     await page.getByRole('heading', { name: 'Workbench' }).waitFor();
     await page.getByRole('button', { name: 'Planner', exact: true }).click();
-    assert.equal(await page.locator('.bcw-note strong').innerText(), payload);
+    assert.equal(await page.locator('.bcw-note strong').innerText(), 'Edited planner note');
     await page.getByRole('button', { name: 'Settings', exact: true }).click();
     await page.getByLabel('Theme').selectOption('dark');
     await page.reload();
@@ -72,6 +78,9 @@ async function main() {
 
     await page.getByRole('button', { name: 'Print Lab', exact: true }).click();
     assert.match(await page.locator('.bcw-print-preview').innerText(), /February 2027|January 2027/);
+    await page.getByLabel('Layout').selectOption('fixed');
+    await page.getByLabel('ISO week numbers').check();
+    assert.match(await page.locator('.bcw-grid caption').innerText(), /6 rows/);
     const functionalRequests = requests.filter(url => !url.includes('favicon.ico'));
     assert.equal(functionalRequests.every(url => url === '/fixture'), true, 'the Workbench must not make third-party requests');
     assert.equal(functionalRequests.length, 3, 'the fixture is loaded initially and reloaded for planner and settings persistence');
