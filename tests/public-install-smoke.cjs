@@ -52,8 +52,21 @@ async function main() {
     assert.equal(userScriptsEnabled, true, 'Violentmonkey must have Chrome’s Allow User Scripts permission enabled');
 
     const listing = await context.newPage();
-    await listing.goto(listingUrl, { waitUntil: 'domcontentloaded', timeout: 45_000 });
-    assert.match(await listing.locator('body').innerText(), /Version\s*1\.0\.1/);
+    const listingResponse = await listing.goto(listingUrl, { waitUntil: 'domcontentloaded', timeout: 45_000 });
+    await listing.waitForTimeout(1500);
+    const listingText = await listing.locator('body').innerText();
+    if (!/Version\s*1\.0\.1/.test(listingText)) {
+      const diagnostic = await listing.locator('body').evaluate(body => body.innerHTML.slice(0, 4000));
+      console.error(JSON.stringify({
+        listingStatus: listingResponse?.status(),
+        listingUrl: listing.url(),
+        listingTitle: await listing.title(),
+        listingText: listingText.slice(0, 1200),
+        listingHtml: diagnostic,
+      }, null, 2));
+      await listing.screenshot({ path: path.join(screenshotDir, '00-greasyfork-listing-diagnostic.png'), fullPage: false });
+    }
+    assert.match(listingText, /Version\s*1\.0\.1/);
     const installLink = listing.getByRole('link', { name: 'Install this script', exact: true });
     const installUrl = await installLink.getAttribute('href');
     assert.match(installUrl, /^https:\/\/update\.greasyfork\.org\/scripts\/598838\//);
