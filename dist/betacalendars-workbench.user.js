@@ -18,6 +18,7 @@
 
   const STORE = 'betacalendars.workbench.v1';
   const PREFS = 'betacalendars.workbench.settings.v1';
+  const PANEL_STATE = 'betacalendars.workbench.panel.v1';
   const MONTHS = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
   const WEEKDAYS = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
   const RESOURCES = [
@@ -133,7 +134,7 @@
     Object.assign(host.style, { position: 'fixed', inset: 'auto 18px 18px auto', zIndex: '2147483000' });
     document.documentElement.append(host);
     const shadow = host.attachShadow({ mode: 'open' });
-    const style = document.createElement('style'); style.textContent = CSS;
+    const style = document.createElement('style'); style.textContent = `${CSS}.bcw-panel.bcw-minimized{height:78px;min-height:78px}.bcw-panel.bcw-minimized .bcw-context,.bcw-panel.bcw-minimized .bcw-tabs,.bcw-panel.bcw-minimized .bcw-body{display:none}.bcw-writing-area{border:1px solid #9cadbf;min-height:40px;padding:8px;margin-top:10px}.bcw-strong-borders .bcw-grid td{border-width:2px}`;
     shadow.append(style);
     const launcher = el('button', 'bcw-launcher', 'BC'); launcher.type = 'button'; launcher.setAttribute('aria-label', 'Open Beta Calendars Workbench'); launcher.setAttribute('aria-expanded', 'false'); shadow.append(launcher);
     const panel = el('section', 'bcw-panel'); panel.setAttribute('aria-label', 'Beta Calendars Workbench'); panel.hidden = true; shadow.append(panel);
@@ -145,7 +146,7 @@
       panel.replaceChildren();
       const header = el('header', 'bcw-header');
       const brand = el('div'); const eyebrow = el('div', 'bcw-eyebrow', 'BETA CALENDARS'); const title = el('h1', '', 'Workbench'); brand.append(eyebrow, title);
-      const actions = el('div', 'bcw-header-actions'); const paletteButton = button('Ctrl/⌘ + Shift + K', () => openPalette()); paletteButton.setAttribute('aria-label', 'Open command palette'); const closeButton = button('×', closePanel); closeButton.setAttribute('aria-label', 'Close Workbench'); actions.append(paletteButton, closeButton); header.append(brand, actions);
+      const actions = el('div', 'bcw-header-actions'); const paletteButton = button('Ctrl/⌘ + Shift + K', () => openPalette()); paletteButton.setAttribute('aria-label', 'Open command palette'); const minimizeButton = button(panel.classList.contains('bcw-minimized') ? '□' : '−', toggleMinimize); minimizeButton.setAttribute('aria-label', panel.classList.contains('bcw-minimized') ? 'Restore Workbench' : 'Minimize Workbench'); const closeButton = button('×', closePanel); closeButton.setAttribute('aria-label', 'Close Workbench'); actions.append(paletteButton, minimizeButton, closeButton); header.append(brand, actions);
       const contextBar = el('div', 'bcw-context'); contextBar.append(el('span', '', `Page: ${context.type}`)); contextBar.append(el('span', '', context.month ? `${MONTHS[context.month - 1]}${context.year ? ` ${context.year}` : ''}` : `${MONTHS[settings.month - 1]} ${settings.year}`));
       const tabs = el('nav', 'bcw-tabs'); tabs.setAttribute('aria-label', 'Workbench sections');
       const names = ['Overview', 'Month Grid', 'Date Inspector', 'ISO Week', 'Planner', 'Print Lab', 'Validation', 'Resources', 'Settings'];
@@ -237,8 +238,9 @@
       [['High contrast', 'contrast'], ['Larger text', 'largeText'], ['Underline links', 'underline'], ['Floating launcher', 'showLauncher'], ['Keyboard shortcuts', 'shortcuts']].forEach(([label, key]) => list.append(field(label, toggle(label, settings[key], checked => update(key, checked))))); wrap.append(list);
       wrap.append(button('Reset settings', () => { if (confirm('Reset Workbench settings in this browser?')) { Object.assign(settings, DEFAULTS); saveSettings(settings); render(); } })); return wrap;
     }
-    function openPanel() { focusedBeforeOpen = shadow.activeElement; panel.hidden = false; launcher.hidden = true; launcher.setAttribute('aria-expanded', 'true'); render(); panel.querySelector('button')?.focus(); }
-    function closePanel() { panel.hidden = true; launcher.hidden = !settings.showLauncher; launcher.setAttribute('aria-expanded', 'false'); dialog.hidden = true; printStyle.textContent = ''; document.getElementById('bcw-print-global')?.remove(); if (focusedBeforeOpen?.isConnected) focusedBeforeOpen.focus(); else if (!launcher.hidden) launcher.focus(); }
+    function openPanel() { focusedBeforeOpen = shadow.activeElement; panel.hidden = false; panel.classList.remove('bcw-minimized'); localStorage.setItem(PANEL_STATE, 'open'); launcher.hidden = true; launcher.setAttribute('aria-expanded', 'true'); render(); panel.querySelector('button')?.focus(); }
+    function toggleMinimize() { const minimized = panel.classList.toggle('bcw-minimized'); localStorage.setItem(PANEL_STATE, minimized ? 'minimized' : 'open'); render(); }
+    function closePanel() { panel.hidden = true; panel.classList.remove('bcw-minimized'); localStorage.setItem(PANEL_STATE, 'closed'); launcher.hidden = !settings.showLauncher; launcher.setAttribute('aria-expanded', 'false'); dialog.hidden = true; printStyle.textContent = ''; document.getElementById('bcw-print-global')?.remove(); if (focusedBeforeOpen?.isConnected) focusedBeforeOpen.focus(); else if (!launcher.hidden) launcher.focus(); }
     function openTab(name) { activeTab = name; if (panel.hidden) openPanel(); else render(); }
     function setMonth(year, month) { settings.year = year; settings.month = month; settings.date = { year, month, day: Math.min(settings.date.day, daysInMonth(year, month)) }; saveSettings(settings); render(); }
     function shiftMonth(amount) { let year = settings.year; let month = settings.month + amount; if (month < 1) { month = 12; year -= 1; } if (month > 12) { month = 1; year += 1; } if (year > 0 && year < 10000) setMonth(year, month); }
@@ -255,6 +257,8 @@
     shadow.addEventListener('keydown', event => { if (event.key === 'Escape' && !dialog.hidden) { dialog.hidden = true; launcher.focus(); } else if (event.key === 'Escape' && !panel.hidden) closePanel(); else if (event.key === 'Tab' && !panel.hidden && dialog.hidden) { const focusable = [...panel.querySelectorAll('button,input,select,a,[tabindex="0"]')].filter(item => !item.disabled && item.offsetParent !== null); if (focusable.length && event.shiftKey && shadow.activeElement === focusable[0]) { event.preventDefault(); focusable.at(-1).focus(); } else if (focusable.length && !event.shiftKey && shadow.activeElement === focusable.at(-1)) { event.preventDefault(); focusable[0].focus(); } } });
     window.addEventListener('keydown', event => { if (settings.shortcuts && (event.metaKey || event.ctrlKey) && event.shiftKey && event.key.toLowerCase() === 'k') { event.preventDefault(); if (panel.hidden) openPanel(); openPalette(); } });
     launcher.hidden = !settings.showLauncher; render();
+    const savedPanelState = localStorage.getItem(PANEL_STATE);
+    if (savedPanelState === 'open' || savedPanelState === 'minimized') { panel.hidden = false; launcher.hidden = true; launcher.setAttribute('aria-expanded', 'true'); panel.classList.toggle('bcw-minimized', savedPanelState === 'minimized'); render(); }
   }
 
   function el(tag, className = '', text = '') { const node = document.createElement(tag); if (className) node.className = className; if (text !== '') node.textContent = String(text); return node; }
