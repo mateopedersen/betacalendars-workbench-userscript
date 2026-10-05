@@ -27,6 +27,11 @@ async function main() {
     await launcher.waitFor();
     await launcher.click();
     await page.getByRole('heading', { name: 'Workbench' }).waitFor();
+    await page.getByRole('button', { name: 'Minimize Workbench' }).click();
+    assert.equal(await page.locator('.bcw-panel').evaluate(node => node.classList.contains('bcw-minimized')), true);
+    await page.getByRole('button', { name: 'Restore Workbench' }).click();
+    await page.getByRole('button', { name: 'Close Workbench' }).click();
+    await page.getByRole('button', { name: 'Open Beta Calendars Workbench' }).click();
 
     await page.getByRole('button', { name: 'Month Grid', exact: true }).click();
     await page.getByLabel('Month').selectOption('2');
